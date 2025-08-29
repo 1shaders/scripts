@@ -237,5 +237,65 @@ local function CSGPST_fake_script() -- CreateESP.LocalScript
 			local FILL_B = tonumber(script.Parent.Parent.Parent.CustomizeESP.FILL_B.Text)
 			local OUT_R = tonumber(script.Parent.Parent.Parent.CustomizeESP.OUT_R.Text)
 			local OUT_G = tonumber(script.Parent.Parent.Parent.CustomizeESP.OUT_G.Text)
+			local OUT_B = tonumber(script.Parent.Parent.Parent.CustomizeESP.OUT_B.Text)	
+			local esp = Instance.new("Highlight")
+			esp.Name = v.Name
+			esp.FillTransparency = 0.3
+			esp.FillColor = Color3.fromRGB(FILL_R, FILL_G, FILL_B)
+			esp.OutlineColor = Color3.fromRGB(OUT_R, OUT_G, OUT_B)
+			esp.OutlineTransparency = 0
+			esp.Parent = v.Character
+		end
+	end)
+end
+coroutine.wrap(CSGPST_fake_script)()
+local function BELCX_fake_script() -- RemoveESP.LocalScript 
+	local script = Instance.new('LocalScript', RemoveESP)
+
+	script.Parent.MouseButton1Click:Connect(function()
+		local players = game.Players:GetPlayers()
+		for _, v in pairs(players) do
+			local esp = v.Character:FindFirstChild(v.Name)
+			if esp then
+				esp:Destroy()
+			else
+				warn("No ESP Found - Couldn't find Any ESP In the Character!")
+			end
+		end
+	end)
+end
+coroutine.wrap(BELCX_fake_script)()
+local function PBDY_fake_script() -- FILL_PREVIEW.LocalScript 
+	local script = Instance.new('LocalScript', FILL_PREVIEW)
+
+	while wait() do
+		local FILL_R = tonumber(script.Parent.Parent.FILL_R.Text)
+		local FILL_G = tonumber(script.Parent.Parent.FILL_G.Text)
+		local FILL_B = tonumber(script.Parent.Parent.FILL_B.Text)
+		local OUT_R = tonumber(script.Parent.Parent.OUT_R.Text)
+		local OUT_G = tonumber(script.Parent.Parent.OUT_G.Text)
+		local OUT_B = tonumber(script.Parent.Parent.OUT_B.Text)	
+		
+		script.Parent.BackgroundColor3 = Color3.fromRGB(FILL_R, FILL_G, FILL_B)
+		
+	end
+end
+coroutine.wrap(PBDY_fake_script)()
+local function JPUFZ_fake_script() -- out_PREVIEW.LocalScript 
+	local script = Instance.new('LocalScript', out_PREVIEW)
+
+	while wait() do
+		local FILL_R = tonumber(script.Parent.Parent.FILL_R.Text)
+		local FILL_G = tonumber(script.Parent.Parent.FILL_G.Text)
+		local FILL_B = tonumber(script.Parent.Parent.FILL_B.Text)
+		local OUT_R = tonumber(script.Parent.Parent.OUT_R.Text)
+		local OUT_G = tonumber(script.Parent.Parent.OUT_G.Text)
+		local OUT_B = tonumber(script.Parent.Parent.OUT_B.Text)	
+		
+		script.Parent.BackgroundColor3 = Color3.fromRGB(OUT_R, OUT_G, OUT_B)
+		
+	end
+end
+coroutine.wrap(JPUFZ_fake_script)()
 
 

@@ -11,7 +11,7 @@ local Icons = {
     ["mushrooms"] = "rbxassetid://9134534696",
     ["wild_flower"] = "rbxassetid://9134545166",
     ["crit_star"] = "rbxassetid://9866757805",
-    ["vitality_star"] = "rbxassetid://9866757969"
+    ["vitality_star"] = "rbxassetid://9866757969",
 	["alchemy_crystal"] = "rbxassetid://9866757969"
 }
 local espobjs = {}
@@ -122,6 +122,7 @@ local function recreateESP()
     addKit("hidden-metal", "iron")
     addKit("bee", "bee")
     addKit("treeOrb", "natures_essence_1")
+	addKit("
     
     addKit("Thorns", "thorns", true)
     addKit("Mushrooms", "mushrooms", true)

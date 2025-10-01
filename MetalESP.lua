@@ -122,7 +122,7 @@ local function recreateESP()
     addKit("hidden-metal", "iron")
     addKit("bee", "bee")
     addKit("treeOrb", "natures_essence_1")
-	addKit("
+--	addKit("
     
     addKit("Thorns", "thorns", true)
     addKit("Mushrooms", "mushrooms", true)

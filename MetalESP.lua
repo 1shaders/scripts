@@ -128,7 +128,7 @@ local function recreateESP()
     addKit("Flower", "wild_flower", true)
     addKit("CritStar", "crit_star", true)
 	addKit("VitalityStar", "vitality_star", true)
-	addkit("alchemyCrystal", "alchemy_crystal", true)
+	addkit("AlchemyCrystal", "alchemy_crystal", true)
 end
 
 local UserInputService = game:GetService("UserInputService")

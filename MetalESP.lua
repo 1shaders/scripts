@@ -12,6 +12,7 @@ local Icons = {
     ["wild_flower"] = "rbxassetid://9134545166",
     ["crit_star"] = "rbxassetid://9866757805",
     ["vitality_star"] = "rbxassetid://9866757969"
+	["alchemy_crystal"] = "rbxassetid://9866757969"
 }
 local espobjs = {}
 local espfold = Instance.new("Folder")
@@ -127,6 +128,7 @@ local function recreateESP()
     addKit("Flower", "wild_flower", true)
     addKit("CritStar", "crit_star", true)
 	addKit("VitalityStar", "vitality_star", true)
+	addkit("alchemyCrystal", "alchemy_crystal", true)
 end
 
 local UserInputService = game:GetService("UserInputService")

@@ -1,142 +1,81 @@
+local v1 = game:GetService("Players")
+local v2 = game:GetService("CollectionService")
+local v3 = game:GetService("UserInputService")
+local v4 = game:GetService("Workspace")
+
 repeat task.wait() until game:IsLoaded()
 
-local Keybind = shared.Keybind or "RightShift"
-local collectionService = game:GetService("CollectionService")
-local debris = game:GetService("Debris")
-local Icons = {
-    ["iron"] = "rbxassetid://6850537969",
-    ["bee"] = "rbxassetid://7343272839",
-    ["natures_essence_1"] = "rbxassetid://11003449842",
-    ["thorns"] = "rbxassetid://9134549615",
-    ["mushrooms"] = "rbxassetid://9134534696",
-    ["wild_flower"] = "rbxassetid://9134545166",
-    ["crit_star"] = "rbxassetid://9866757805",
-    ["vitality_star"] = "rbxassetid://9866757969",
+local v5 = v1.LocalPlayer
+local v6 = shared.Keybind or Enum.KeyCode.RightShift
+local v7 = {
+	["iron"] = "rbxassetid://6850537969",
+	["bee"] = "rbxassetid://7343272839",
+	["natures_essence"] = "rbxassetid://11003449842",
+	["thorns"] = "rbxassetid://9134549615",
+	["mushrooms"] = "rbxassetid://9134534696",
+	["wild_flower"] = "rbxassetid://9134545166",
+	["crit_star"] = "rbxassetid://9866757805",
+	["vitality_star"] = "rbxassetid://9866757969",
 	["alchemy_crystal"] = "rbxassetid://9866757969"
 }
-local espobjs = {}
-local espfold = Instance.new("Folder")
-local gui = Instance.new("ScreenGui", game:GetService("Players").LocalPlayer.PlayerGui)
-gui.ResetOnSpawn = false
-espfold.Parent = gui
 
-local hidden = false
+local v8 = {
+	["hidden-metal"] = "iron",
+	["bee"] = "bee",
+	["treeOrb"] = "natures_essence",
+	["alchemy_crystal"] = "alchemy_crystal"
+}
 
-local function isKeybindValid(key)
-    return Enum.KeyCode[key] ~= nil
+local v9 = {
+	["Thorns"] = "thorns",
+	["Mushrooms"] = "mushrooms",
+	["Flower"] = "wild_flower",
+	["CritStar"] = "crit_star",
+	["VitalityStar"] = "vitality_star"
+}
+
+local v10 = Instance.new("ScreenGui")
+v10.Name = game:GetService("HttpService"):GenerateGUID(false)
+v10.ResetOnSpawn = false
+v10.Parent = v5:WaitForChild("PlayerGui")
+
+local v11 = {}
+
+local v12 = function(obj, key)
+	if not obj or v11[obj] then return end
+	local p = obj:IsA("Model") and (obj.PrimaryPart or obj:FindFirstChildWhichIsA("BasePart")) or obj
+	if not p then return end
+
+	local b = Instance.new("BillboardGui")
+	b.Adornee = p
+	b.Size = UDim2.new(0, 26, 0, 26)
+	b.AlwaysOnTop = true
+	b.Parent = v10
+
+	local i = Instance.new("ImageLabel")
+	i.Size = UDim2.new(1, 0, 1, 0)
+	i.BackgroundTransparency = 0.5
+	i.Image = v7[key] or ""
+	i.Parent = b
+	Instance.new("UICorner", i)
+	
+	v11[obj] = b
 end
 
-local function showNotification(message)
-    local notification = Instance.new("TextLabel")
-    notification.Size = UDim2.new(0, 300, 0, 50)
-    notification.Position = UDim2.new(0.5, -150, 0, 50)
-    notification.BackgroundColor3 = Color3.fromRGB(30, 30, 30)
-    notification.TextColor3 = Color3.new(1, 1, 1)
-    notification.Font = Enum.Font.SourceSansBold
-    notification.TextSize = 20
-    notification.Text = message
-    notification.AnchorPoint = Vector2.new(0.5, 0)
-    notification.Parent = gui
-
-    debris:AddItem(notification, 3)
+for tag, icon in pairs(v8) do
+	v2:GetInstanceAddedSignal(tag):Connect(function(o) v12(o, icon) end)
+	v2:GetInstanceRemovedSignal(tag):Connect(function(o) if v11[o] then v11[o]:Destroy() v11[o] = nil end end)
+	for _, o in pairs(v2:GetTagged(tag)) do v12(o, icon) end
 end
 
-if not isKeybindValid(Keybind) then
-    showNotification("Invalid keybind! Defaulting to RightShift.")
-    Keybind = "RightShift"
-else
-    showNotification("Press "..tostring(Keybind).." to show/hide esp")
-end
+v4.ChildAdded:Connect(function(c) if v9[c.Name] then v12(c, v9[c.Name]) end end)
+v4.ChildRemoved:Connect(function(c) if v11[c] then v11[c]:Destroy() v11[c] = nil end end)
 
-local function espadd(v, icon)
-    local billboard = Instance.new("BillboardGui")
-    billboard.Parent = espfold
-    billboard.Name = "iron"
-    billboard.StudsOffsetWorldSpace = Vector3.new(0, 3, 1.5)
-    billboard.Size = UDim2.new(0, 32, 0, 32)
-    billboard.AlwaysOnTop = true
-    billboard.Adornee = v
-    local image = Instance.new("ImageLabel")
-    image.BackgroundTransparency = 0.5
-    image.BorderSizePixel = 0
-    image.Image = Icons[icon] or ""
-    image.BackgroundColor3 = Color3.fromRGB(20, 20, 20)
-    image.Size = UDim2.new(0, 32, 0, 32)
-    image.AnchorPoint = Vector2.new(0.5, 0.5)
-    image.Parent = billboard
-    local uicorner = Instance.new("UICorner")
-    uicorner.CornerRadius = UDim.new(0, 4)
-    uicorner.Parent = image
-    espobjs[v] = billboard
-end
+for _, c in pairs(v4:GetChildren()) do if v9[c.Name] then v12(c, v9[c.Name]) end end
 
-local connections = {}
-
-local function reset()
-    for _, v in pairs(connections) do
-        pcall(function() v:Disconnect() end)
-    end
-    espfold:ClearAllChildren()
-    table.clear(espobjs)
-end
-
-local function addKit(tag, icon, custom)
-    if not custom then
-        local con1 = collectionService:GetInstanceAddedSignal(tag):Connect(function(v)
-            espadd(v.PrimaryPart, icon)
-        end)
-        local con2 = collectionService:GetInstanceRemovedSignal(tag):Connect(function(v)
-            if espobjs[v.PrimaryPart] then
-                espobjs[v.PrimaryPart]:Destroy()
-                espobjs[v.PrimaryPart] = nil
-            end
-        end)
-        table.insert(connections, con1)
-        table.insert(connections, con2)
-        for _, v in pairs(collectionService:GetTagged(tag)) do
-            espadd(v.PrimaryPart, icon)
-        end
-    else
-        local function check(v)
-            if v.Name == tag and v.ClassName == "Model" then
-                espadd(v.PrimaryPart, icon)
-            end
-        end
-        game.Workspace.ChildAdded:Connect(check)
-        game.Workspace.ChildRemoved:Connect(function(v)
-            pcall(function()
-                if espobjs[v.PrimaryPart] then
-                    espobjs[v.PrimaryPart]:Destroy()
-                    espobjs[v.PrimaryPart] = nil
-                end
-            end)
-        end)
-        for _, v in pairs(game.Workspace:GetChildren()) do
-            check(v)
-        end
-    end
-end
-
-local function recreateESP()
-    reset()
-    addKit("hidden-metal", "iron")
-    addKit("bee", "bee")
-    addKit("treeOrb", "natures_essence_1")
-	  addKit("alchemy_crystal", "alchemy_crystal")
-    
-    addKit("Thorns", "thorns", true)
-    addKit("Mushrooms", "mushrooms", true)
-    addKit("Flower", "wild_flower", true)
-    addKit("CritStar", "crit_star", true)
-	  addKit("VitalityStar", "vitality_star", true)
-end
-
-local UserInputService = game:GetService("UserInputService")
-UserInputService.InputBegan:Connect(function(input, gameProcessed)
-    if gameProcessed then return end
-    if input.KeyCode == Enum.KeyCode[Keybind] then
-        if hidden then recreateESP(); hidden = false else reset(); hidden = true end
-    end
+v3.InputBegan:Connect(function(i, p)
+	if p then return end
+	if i.KeyCode == (typeof(v6) == "string" and Enum.KeyCode[v6] or v6) then
+		v10.Enabled = not v10.Enabled
+	end
 end)
-
-recreateESP()

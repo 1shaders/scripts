@@ -1,1 +1,5 @@
-top 1 skid
+hi guys
+
+this is my script list
+
+i use this for fun

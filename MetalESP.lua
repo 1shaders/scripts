@@ -79,6 +79,7 @@ game:GetService("UserInputService").InputBegan:Connect(function(v19, v20)
     if v20 then return end
     if v19.KeyCode == (typeof(v1) == "string" and Enum.KeyCode[v1] or v1) then
         v7.Enabled = not v7.Enabled
+        print(v7.Enabled)
     end
 end)
  

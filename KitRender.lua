@@ -8,123 +8,207 @@
 -- * Discord @ 1shaders                                      *
 -- ***********************************************************
 
+local cloneref = cloneref or function(v) return v end
 
-local v0 = cloneref or function(v) return v end
+local Players    = cloneref(game:GetService("Players"))
+local RunService = cloneref(game:GetService("RunService"))
+local RS         = cloneref(game:GetService("ReplicatedStorage"))
 
-local v1 = v0(game:GetService("Players"))
-local v2 = v0(game:GetService("RunService"))
-local v3 = v0(game:GetService("ReplicatedStorage"))
+local lplr    = Players.LocalPlayer
+local kitMeta = require(RS.TS.games.bedwars.kit["bedwars-kit-meta"]).BedwarsKitMeta
 
-local v4 = v1.LocalPlayer
-local v5 = require(v3.TS.games.bedwars.kit['bedwars-kit-meta']).BedwarsKitMeta
+local connections      = {}
+local icons            = {}
+local loops            = {}
+local debounce         = {}
+local active           = false
 
-local v6 = {}
-local v7 = {}
-
-local function v8()
-    return v4.PlayerGui:FindFirstChild("MatchDraftApp")
+local function getKitImage(plr)
+    local kit  = plr:GetAttribute("PlayingAsKits") or "none"
+    local meta = kitMeta[kit] or kitMeta.none
+    return meta and meta.renderImage or ""
 end
 
-local function v9(v10, v11, v12)
-    local v13 = v10
-    for v14 = 1, v12 do
-        v13 = v13.Parent
-        if not v13 then return nil end
-        if v13.Name == v11 then return v13 end
-    end
-    return nil
+local function cleanup()
+    for _, conn in pairs(connections) do conn:Disconnect() end
+    connections = {}
+    icons       = {}
+    for k in pairs(loops)   do loops[k]   = nil end
+    for k in pairs(debounce) do debounce[k] = nil end
 end
 
-local function v15(v16, v17)
-    local v18 = v7[v16]
-    if v18 then
-        v18.Image = v17
+-- Squads mode
+
+local function updateSquadsIcon(slot, plr)
+    if not slot or not slot.Parent then return end
+    local img      = getKitImage(plr)
+    local existing = icons[slot]
+    if existing and existing.Parent then
+        existing.Image = img
     else
-        v18 = Instance.new("ImageLabel")
-        v18.Name = "KitRender"
-        v18.Size = UDim2.new(1, 0, 1, 0)
-        v18.Position = UDim2.new(1.1, 0, 0, 0)
-        v18.BackgroundTransparency = 1
-        v18.Image = v17
-        v18.Parent = v16
-        v7[v16] = v18
+        local icon = Instance.new("ImageLabel")
+        icon.Name               = "KitRender"
+        icon.Size               = UDim2.new(1, 0, 1, 0)
+        icon.Position           = UDim2.new(1.1, 0, 0, 0)
+        icon.BackgroundTransparency = 1
+        icon.Image              = img
+        icon.Parent             = slot
+        icons[slot]             = icon
     end
 end
 
-local function v19(v20)
-    local v21 = v6[v20]
-    if v21 then
-        v21:Disconnect()
-        v6[v20] = nil
-    end
-end
+local function setupSquadsIcon(obj)
+    if obj.Name ~= "PlayerRender" then return end
 
-local function v22(v23, v24)
-    if not v24 or not v24.Parent then
-        v19(v23.UserId)
-        local v25 = v7[v24]
-        if v25 then
-            v25:Destroy()
-            v7[v24] = nil
+    local p = obj
+    local found = false
+    for _ = 1, 5 do
+        p = p.Parent
+        if not p then return end
+        if p.Name == "MatchDraftTeamCardRow" then found = true break end
+    end
+    if not found then return end
+
+    local slot = obj.Parent and obj.Parent:FindFirstChild("3")
+    if not slot then return end
+
+    local userId = tonumber(string.match(obj.Image, "id=(%d+)"))
+    if not userId then return end
+
+    local plr = Players:GetPlayerByUserId(userId)
+    if not plr then return end
+
+    if connections[plr.UserId] then return end
+
+    updateSquadsIcon(slot, plr)
+
+    connections[plr.UserId] = plr:GetAttributeChangedSignal("PlayingAsKits"):Connect(function()
+        local t = tick()
+        if not debounce[plr.UserId] or (t - debounce[plr.UserId]) >= 0.1 then
+            debounce[plr.UserId] = t
+            updateSquadsIcon(slot, plr)
         end
-        return
-    end
-
-    local v26 = v23:GetAttribute("PlayingAsKits") or "none"
-    local v27 = v5[v26] or v5.none
-    v15(v24, v27.renderImage)
-end
-
-local function v28(v29)
-    if v29.Name ~= "PlayerRender" then return end
-
-    if not v9(v29, "MatchDraftTeamCardRow", 5) then return end
-
-    local v30 = v29.Parent and v29.Parent:FindFirstChild("3")
-    if not v30 then return end
-
-    local v31 = tonumber(v29.Image:match("id=(%d+)"))
-    if not v31 then return end
-
-    local v32 = v1:GetPlayerByUserId(v31)
-    if not v32 then return end
-
-    if v6[v32.UserId] then return end
-
-    v22(v32, v30)
-
-    v6[v32.UserId] = v32:GetAttributeChangedSignal("PlayingAsKits"):Connect(function()
-        v22(v32, v30)
     end)
 end
 
-local function v33(v34)
-    for v35, v36 in v34:GetDescendants() do
-        task.spawn(v28, v36)
+local function setupSquads(app)
+    task.wait(0.5)
+    for _, obj in app:GetDescendants() do
+        task.spawn(setupSquadsIcon, obj)
     end
-
-    v34.DescendantAdded:Connect(function(v37)
-        task.spawn(v28, v37)
+    app.DescendantAdded:Connect(function(obj)
+        task.wait(0.1)
+        setupSquadsIcon(obj)
     end)
 end
 
-v1.PlayerRemoving:Connect(function(v38)
-    v19(v38.UserId)
+-- Regular mode (5v5 / duos)
+
+local function findPlayer(label, container)
+    local render = container:FindFirstChild("PlayerRender", true)
+    if render and render:IsA("ImageLabel") then
+        local userId = string.match(render.Image or "", "id=(%d+)")
+        if userId then
+            local plr = Players:GetPlayerByUserId(tonumber(userId))
+            if plr then return plr end
+        end
+    end
+    for _, plr in ipairs(Players:GetPlayers()) do
+        if plr.Name == label.Text or plr.DisplayName == label.Text then return plr end
+    end
+end
+
+local function handleLabel(label)
+    if not (label:IsA("TextLabel") and label.Name == "PlayerName") then return end
+    task.spawn(function()
+        local container = label.Parent
+        for _ = 1, 3 do
+            if container then container = container.Parent end
+        end
+        if not container or not container:IsA("Frame") then return end
+
+        local plr = findPlayer(label, container)
+        if not plr then
+            task.wait(0.5)
+            plr = findPlayer(label, container)
+        end
+        if not plr then return end
+
+        local card = container:FindFirstChild("1") and container["1"]:FindFirstChild("MatchDraftPlayerCard")
+        if not card then return end
+
+        local icon = card:FindFirstChild("KitRender")
+        if not icon then
+            icon = Instance.new("ImageLabel")
+            icon.Name               = "KitRender"
+            icon.AnchorPoint        = Vector2.new(1, 0.5)
+            icon.BackgroundTransparency = 1
+            icon.Position           = UDim2.new(1.05, 0, 0.5, 0)
+            icon.Size               = UDim2.new(1.5, 0, 1.5, 0)
+            icon.SizeConstraint     = Enum.SizeConstraint.RelativeYY
+            icon.Parent             = card
+            local uar = Instance.new("UIAspectRatioConstraint")
+            uar.AspectRatio   = 1
+            uar.AspectType    = Enum.AspectType.FitWithinMaxSize
+            uar.DominantAxis  = Enum.DominantAxis.Width
+            uar.Parent        = icon
+        end
+
+        icon.Image = getKitImage(plr)
+
+        local key = plr.UserId
+        if loops[key] then return end
+        loops[key] = true
+        task.spawn(function()
+            while loops[key] do
+                if not container or not container.Parent then break end
+                if icon and icon.Parent then
+                    local img = getKitImage(plr)
+                    if icon.Image ~= img then icon.Image = img end
+                end
+                task.wait(0.3)
+            end
+            loops[key] = nil
+        end)
+    end)
+end
+
+local function setupRegular(app)
+    for _, child in ipairs(app:GetDescendants()) do
+        handleLabel(child)
+    end
+    app.DescendantAdded:Connect(function(child)
+        handleLabel(child)
+    end)
+end
+
+-- Main loop
+
+Players.PlayerRemoving:Connect(function(plr)
+    local conn = connections[plr.UserId]
+    if conn then conn:Disconnect() connections[plr.UserId] = nil end
+    loops[plr.UserId]   = nil
+    debounce[plr.UserId] = nil
 end)
 
-local v39 = false
-v2.Heartbeat:Connect(function()
-    if v39 then return end
+RunService.Heartbeat:Connect(function()
+    if active then return end
+    local app = lplr.PlayerGui:FindFirstChild("MatchDraftApp")
+    if not app then return end
 
-    local v40 = v8()
-    if not v40 then return end
+    active = true
+    local isSquads = app:FindFirstChild("MatchDraftTeamCardRow", true) ~= nil
 
-    v39 = true
-    v33(v40)
+    if isSquads then
+        setupSquads(app)
+    else
+        setupRegular(app)
+    end
 
-    v40.AncestryChanged:Connect(function()
-        if not v40.Parent then
-            v39 = false
+    app.AncestryChanged:Connect(function()
+        if not app.Parent then
+            active = false
+            cleanup()
         end
     end)
 end)

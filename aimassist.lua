@@ -1,8 +1,8 @@
-local Players = game:GetService('Players')
-local Workspace = game:GetService('Workspace')
-local UserInputService = game:GetService('UserInputService')
+local Players = cloneref(game:GetService('Players'))
+local Workspace = cloneref(game:GetService('Workspace'))
+local UserInputService = cloneref(game:GetService('UserInputService'))
 local Camera = Workspace.CurrentCamera
-local RunService = game:GetService('RunService')
+local RunService = cloneref(game:GetService('RunService'))
 
 -- Initialize GUI
 local screenGui = Instance.new('ScreenGui')
